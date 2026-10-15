@@ -9412,7 +9412,13 @@
     "max": 3.0,
     "default": 1.0,
     "name": "requested-operating-mode-sg-ready-46009",
-    "write": true
+    "write": true,
+    "mappings": {
+      "0": "Block",
+      "1": "Normal",
+      "2": "Low price",
+      "3": "Boost"
+    }
   },
   "43034": {
     "title": "Factor",

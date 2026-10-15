@@ -182,3 +182,16 @@ async def test_smos40_hot_water_temperature_limits():
     await heat_pump.initialize()
     for address in (40060, 40061, 40064, 40065):
         assert heat_pump.get_coil_by_address(address).max == 70.0
+
+
+async def test_smos40_sg_ready_requested_mode_mappings():
+    heat_pump = HeatPump(Model.SMOS40)
+    await heat_pump.initialize()
+    coil = heat_pump.get_coil_by_address(46009)
+    assert coil.mappings == {
+        "0": "BLOCK",
+        "1": "NORMAL",
+        "2": "LOW PRICE",
+        "3": "BOOST",
+    }
+    assert coil.is_writable
