@@ -146,3 +146,39 @@ class ProductInfoTestCase(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+@pytest.mark.parametrize(
+    ("address", "title", "size", "factor", "write"),
+    [
+        (42506, "Desired room temperature for zone 1", "s32", 10, True),
+        (42584, "Desired room temperature for zone 40", "s32", 10, True),
+        (45010, "Supply Line Set Point Heating 1", "s16", 10, True),
+        (45552, "Block new compressor", "u8", 1, True),
+        (46015, "Energy price 00:00 - 01:00", "s32", 1, True),
+        (46065, "Charging method hot water", "u8", 1, True),
+        (32446, "Outd. liq. line sensor (BT39)", "s16", 10, False),
+        (35209, "External reading of BT1 activated", "u8", 1, False),
+        (35987, "External reading of BT50 activated", "u8", 1, False),
+        # Holding variants are kept for firmwares that still expose them
+        (45209, "External reading of BT1 activated", "u8", 1, True),
+        (45987, "External reading of BT50 activated", "u8", 1, True),
+    ],
+)
+async def test_smos40_firmware_registers(
+    address: int, title: str, size: str, factor: int, write: bool
+):
+    heat_pump = HeatPump(Model.SMOS40)
+    await heat_pump.initialize()
+    coil = heat_pump.get_coil_by_address(address)
+    assert coil.title == title
+    assert coil.size == size
+    assert coil.factor == factor
+    assert coil.is_writable is write
+
+
+async def test_smos40_hot_water_temperature_limits():
+    heat_pump = HeatPump(Model.SMOS40)
+    await heat_pump.initialize()
+    for address in (40060, 40061, 40064, 40065):
+        assert heat_pump.get_coil_by_address(address).max == 70.0
