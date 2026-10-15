@@ -279,3 +279,41 @@ async def test_write_coil_failed_read(
     modbus_client.write_coils.side_effect = asyncio.IncompleteReadError(bytes([]), 9)
     with pytest.raises(WriteException):
         await connection.write_coil(coil_data)
+
+
+@pytest.fixture(name="connection_smos40")
+async def fixture_connection_smos40():
+    heatpump = HeatPump(Model.SMOS40)
+    heatpump.word_swap = True
+    await heatpump.initialize()
+    yield heatpump, Modbus(heatpump, "tcp://127.0.0.1", 0)
+
+
+@pytest.mark.parametrize(
+    ("address", "raw", "value", "reader", "starting_address", "quantity"),
+    [
+        # Values captured read-only from an SMO S40 over Modbus TCP
+        (42506, [0x00BE, 0x0000], 19.0, "read_holding_registers", 2505, 2),
+        (40207, [0x00B4], 18.0, "read_holding_registers", 206, 1),
+        (35987, [0x0000], 0, "read_input_registers", 5986, 1),
+        (35209, [0x0001], 1, "read_input_registers", 5208, 1),
+    ],
+)
+async def test_read_smos40_coil(
+    connection_smos40,
+    modbus_client: AsyncMock,
+    address: int,
+    raw: List[int],
+    value: Union[int, float],
+    reader: str,
+    starting_address: int,
+    quantity: int,
+):
+    heatpump, connection = connection_smos40
+    coil = heatpump.get_coil_by_address(address)
+    getattr(modbus_client, reader).return_value = raw
+    coil_data = await connection.read_coil(coil)
+    assert coil_data.value == value
+    getattr(modbus_client, reader).assert_called_with(
+        slave_id=0, starting_address=starting_address, quantity=quantity
+    )

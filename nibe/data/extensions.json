@@ -793,5 +793,21 @@
         }
       }
     }
+  },
+  {
+    "description": "SG Ready requested operating mode - SMOS40",
+    "files": [
+      "smos40.json"
+    ],
+    "data": {
+      "46009": {
+        "mappings": {
+          "0": "Block",
+          "1": "Normal",
+          "2": "Low price",
+          "3": "Boost"
+        }
+      }
+    }
   }
 ]
